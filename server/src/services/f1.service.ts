@@ -1,9 +1,10 @@
 import { env } from '../config/env.js'
-import type { F1Meeting, F1NextRace, F1Session, OpenF1Meeting, OpenF1Session } from '../types/f1.js'
+import type { F1DriverStanding, F1Meeting, F1NextRace, F1Session, F1TeamStanding, OpenF1Driver, OpenF1DriverStanding, OpenF1Meeting, OpenF1Session, OpenF1TeamStanding } from '../types/f1.js'
 
 const OPENF1_BASE = 'https://api.openf1.org/v1'
 const CACHE_TTL_MS = 10 * 60 * 1000
 const cache = new Map<string, { value: unknown; expiresAt: number }>()
+const DRIVER_COUNTRY_CODES: Record<number, string> = { 1: 'GB', 3: 'NL', 5: 'BR', 6: 'FR', 10: 'FR', 11: 'MX', 12: 'IT', 14: 'ES', 16: 'MC', 18: 'CA', 22: 'JP', 23: 'TH', 27: 'DE', 30: 'NZ', 31: 'FR', 41: 'SE', 43: 'AR', 44: 'GB', 55: 'ES', 63: 'GB', 77: 'FI', 81: 'AU', 87: 'GB' }
 
 export class OpenF1Error extends Error { statusCode = 502; constructor(message: string) { super(message); this.name = 'OpenF1Error' } }
 
@@ -36,5 +37,43 @@ export async function getNextRace(now = new Date()): Promise<F1NextRace | null> 
   return null
 }
 export async function getDrivers(sessionKey = 'latest') { return openF1<unknown[]>(`/drivers?session_key=${encodeURIComponent(sessionKey)}`) }
-export async function getDriverStandings() { return openF1<unknown[]>(`/championship_drivers?year=${env.season}`) }
-export async function getTeamStandings() { return openF1<unknown[]>(`/championship_teams?year=${env.season}`) }
+async function latestCompletedRaceSessionKey() {
+  const latest = await completedRaceSessions().then((sessions) => sessions.at(-1))
+  if (!latest) throw new OpenF1Error('No completed race session is available for the current season.')
+  return latest.session_key
+}
+async function completedRaceSessions() {
+  const sessions = await openF1<OpenF1Session[]>(`/sessions?year=${env.season}`)
+  return sessions.filter((session) => session.session_name.toLowerCase() === 'race' && new Date(session.date_start).getTime() <= Date.now()).sort(sortByStart)
+}
+async function loadDriverMetadata(sessionKey: number, driverNumbers: Set<number>) {
+  const races = await completedRaceSessions()
+  const metadata = new Map<number, OpenF1Driver>()
+  const orderedKeys = [sessionKey, ...races.slice().reverse().map((race) => race.session_key).filter((key) => key !== sessionKey)]
+  for (const key of orderedKeys) {
+    if (metadata.size >= driverNumbers.size) break
+    const drivers = await openF1<OpenF1Driver[]>(`/drivers?session_key=${key}`)
+    for (const driver of drivers) if (driverNumbers.has(driver.driver_number) && !metadata.has(driver.driver_number)) metadata.set(driver.driver_number, driver)
+  }
+  return metadata
+}
+export async function getDriverStandings(): Promise<F1DriverStanding[]> {
+  const sessionKey = await latestCompletedRaceSessionKey()
+  const standings = await openF1<OpenF1DriverStanding[]>(`/championship_drivers?session_key=${sessionKey}`)
+  const driverMap = await loadDriverMetadata(sessionKey, new Set(standings.map((standing) => standing.driver_number)))
+  return standings.sort((a, b) => a.position_current - b.position_current).map((standing) => {
+    const driver = driverMap.get(standing.driver_number)
+    const imageUrl = driver?.headshot_url ?? null
+    return { position: standing.position_current, driverNumber: standing.driver_number, driver: driver ? `${driver.first_name} ${driver.last_name}` : `Driver ${standing.driver_number}`, team: driver?.team_name ?? 'Team unavailable', points: standing.points_current, teamColor: driver?.team_colour ? `#${driver.team_colour}` : null, countryCode: driver?.country_code ?? DRIVER_COUNTRY_CODES[standing.driver_number] ?? null, nationality: driver?.country_name ?? null, imageUrl }
+  })
+}
+export async function getTeamStandings(): Promise<F1TeamStanding[]> {
+  const sessionKey = await latestCompletedRaceSessionKey()
+  const [standings, drivers] = await Promise.all([
+    openF1<OpenF1TeamStanding[]>(`/championship_teams?session_key=${sessionKey}`),
+    openF1<OpenF1Driver[]>(`/drivers?session_key=${sessionKey}`),
+  ])
+  const teamColors = new Map<string, string>()
+  for (const driver of drivers) if (driver.team_colour && !teamColors.has(driver.team_name)) teamColors.set(driver.team_name, `#${driver.team_colour}`)
+  return standings.sort((a, b) => a.position_current - b.position_current).map((standing) => ({ position: standing.position_current, team: standing.team_name, points: standing.points_current, teamColor: teamColors.get(standing.team_name) ?? null }))
+}

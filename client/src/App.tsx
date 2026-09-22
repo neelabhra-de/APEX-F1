@@ -1,6 +1,7 @@
 import CinematicExperience from './components/cinematic/CinematicExperience'
 import TribesSection from './sections/tribes/TribesSection'
 import GridSection from './sections/grid/GridSection'
+import ChampionshipSection from './sections/championship/ChampionshipSection'
 
 function App() {
   return (
@@ -8,6 +9,7 @@ function App() {
       <CinematicExperience />
       <TribesSection />
       <GridSection />
+      <ChampionshipSection />
     </main>
   )
 }

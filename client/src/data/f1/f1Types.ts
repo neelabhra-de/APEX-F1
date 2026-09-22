@@ -36,3 +36,6 @@ export type ApexRace = {
   raceStart: string
   weekend: WeekendSession[]
 }
+
+export type ApexDriverStanding = { position: number; driverNumber: number; driver: string; team: string; points: number; teamColor: string | null; countryCode: string | null; nationality: string | null; imageUrl: string | null }
+export type ApexConstructorStanding = { position: number; team: string; points: number; teamColor: string | null }

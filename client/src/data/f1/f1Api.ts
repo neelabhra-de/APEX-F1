@@ -1,4 +1,4 @@
-import type { ApexRace, F1Meeting, WeekendSession } from './f1Types'
+import type { ApexConstructorStanding, ApexDriverStanding, ApexRace, F1Meeting, WeekendSession } from './f1Types'
 
 async function getJson<T>(path: string): Promise<T> {
   const response = await fetch(path)
@@ -43,4 +43,12 @@ export async function fetchNextRace(): Promise<ApexRace> {
     raceStart: meeting.raceSession.start,
     weekend: toWeekend(meeting.sessions),
   }
+}
+
+export async function fetchDriverStandings(): Promise<ApexDriverStanding[]> {
+  return getJson<ApexDriverStanding[]>('/api/f1/standings/drivers')
+}
+
+export async function fetchConstructorStandings(): Promise<ApexConstructorStanding[]> {
+  return getJson<ApexConstructorStanding[]>('/api/f1/standings/teams')
 }
