@@ -1,0 +1,111 @@
+import { useLayoutEffect, useRef, useState } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import type { RefObject } from 'react'
+import type { CinematicSceneDefinition } from '../types/cinematic'
+
+gsap.registerPlugin(ScrollTrigger)
+
+interface CinematicScrollSnapshot {
+  overallProgress: number
+  activeSceneIndex: number
+  sceneProgress: number
+}
+
+interface UseCinematicScrollResult extends CinematicScrollSnapshot {
+  scrollRef: RefObject<HTMLDivElement | null>
+}
+
+const PROGRESS_STEP = 0.01
+
+function getSnapshot(
+  progress: number,
+  scenes: readonly CinematicSceneDefinition[],
+): CinematicScrollSnapshot {
+  const enabledScenes = scenes.filter((scene) => scene.enabled)
+  const activeScene =
+    enabledScenes.find(
+      (scene) => progress >= scene.range.start && progress < scene.range.end,
+    ) ?? enabledScenes.at(-1)
+
+  if (!activeScene) {
+    return { overallProgress: progress, activeSceneIndex: 0, sceneProgress: 0 }
+  }
+
+  const sceneProgress = Math.min(
+    1,
+    Math.max(
+      0,
+      (progress - activeScene.range.start) /
+        (activeScene.range.end - activeScene.range.start),
+    ),
+  )
+
+  return { overallProgress: progress, activeSceneIndex: activeScene.index, sceneProgress }
+}
+
+export function useCinematicScroll(
+  scenes: readonly CinematicSceneDefinition[],
+): UseCinematicScrollResult {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const initialSnapshot = getSnapshot(0, scenes)
+  const [snapshot, setSnapshot] = useState(initialSnapshot)
+  const snapshotRef = useRef(initialSnapshot)
+  const frameRef = useRef<number | null>(null)
+  const pendingProgressRef = useRef(0)
+
+  useLayoutEffect(() => {
+    const scrollElement = scrollRef.current
+
+    if (!scrollElement) {
+      return undefined
+    }
+
+    const publishProgress = (progress: number, force = false) => {
+      const nextSnapshot = getSnapshot(progress, scenes)
+      const previousSnapshot = snapshotRef.current
+      const hasSceneChanged = nextSnapshot.activeSceneIndex !== previousSnapshot.activeSceneIndex
+      const hasMeaningfulProgressChange =
+        Math.abs(nextSnapshot.overallProgress - previousSnapshot.overallProgress) >= PROGRESS_STEP ||
+        Math.abs(nextSnapshot.sceneProgress - previousSnapshot.sceneProgress) >= PROGRESS_STEP
+
+      if (force || hasSceneChanged || hasMeaningfulProgressChange) {
+        snapshotRef.current = nextSnapshot
+        setSnapshot(nextSnapshot)
+      }
+    }
+
+    const requestProgressUpdate = (progress: number) => {
+      pendingProgressRef.current = progress
+
+      if (frameRef.current !== null) {
+        return
+      }
+
+      frameRef.current = window.requestAnimationFrame(() => {
+        frameRef.current = null
+        publishProgress(pendingProgressRef.current)
+      })
+    }
+
+    const context = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: scrollElement,
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: (trigger) => requestProgressUpdate(trigger.progress),
+        onRefresh: (trigger) => publishProgress(trigger.progress, true),
+      })
+    }, scrollElement)
+
+    return () => {
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current)
+      }
+
+      context.revert()
+    }
+  }, [scenes])
+
+  return { scrollRef, ...snapshot }
+}

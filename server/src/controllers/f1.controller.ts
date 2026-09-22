@@ -1,0 +1,7 @@
+import type { NextFunction, Request, Response } from 'express'
+import * as f1Service from '../services/f1.service.js'
+export async function nextRace(_request: Request, response: Response, next: NextFunction) { try { const race = await f1Service.getNextRace(); if (!race) return response.status(404).json({ error: 'No upcoming race found.' }); return response.json(race) } catch (error) { next(error) } }
+export async function season(request: Request, response: Response, next: NextFunction) { try { const year = request.query.year ? Number(request.query.year) : undefined; if (year !== undefined && (!Number.isInteger(year) || year < 2000 || year > 2100)) return response.status(400).json({ error: 'year must be a valid season year.' }); return response.json(await f1Service.getSeason(year)) } catch (error) { next(error) } }
+export async function drivers(request: Request, response: Response, next: NextFunction) { try { const sessionKey = typeof request.query.session_key === 'string' ? request.query.session_key : 'latest'; return response.json(await f1Service.getDrivers(sessionKey)) } catch (error) { next(error) } }
+export async function driverStandings(_request: Request, response: Response, next: NextFunction) { try { return response.json(await f1Service.getDriverStandings()) } catch (error) { next(error) } }
+export async function teamStandings(_request: Request, response: Response, next: NextFunction) { try { return response.json(await f1Service.getTeamStandings()) } catch (error) { next(error) } }
