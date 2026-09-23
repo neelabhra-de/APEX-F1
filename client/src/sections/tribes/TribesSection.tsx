@@ -82,7 +82,7 @@ function TribesSection() {
   }, [])
 
   return (
-    <section ref={sectionRef} className="tribes-section">
+    <section id="tribes" ref={sectionRef} className="tribes-section">
       <div className="tribes-viewport">
         <div ref={trackRef} className="tribes-track-wrap"><TribeTrack /></div>
         <div className="tribes-progress" aria-hidden="true"><span /></div>

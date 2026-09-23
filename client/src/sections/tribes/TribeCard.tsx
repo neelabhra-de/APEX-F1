@@ -7,7 +7,7 @@ function TribeCard({ tribe }: TribeCardProps) {
   const style = { '--tribe': tribe.color, '--tribe-soft': tribe.colorSoft } as CSSProperties
 
   return (
-    <article className={`tribe-card tribe-card--${tribe.className}`} style={style}>
+    <article tabIndex={0} className={`tribe-card tribe-card--${tribe.className}`} style={style}>
       <div className="tribe-card__texture" aria-hidden="true">
         <img
           className="tribe-card__image"
@@ -33,6 +33,7 @@ function TribeCard({ tribe }: TribeCardProps) {
         <p className="tribe-card__eyebrow">{tribe.atmosphere}</p>
         <h2>{tribe.title}</h2>
         <p className="tribe-card__description">{tribe.copy}</p>
+        <span className="tribe-card__explore">Explore <i>→</i></span>
       </div>
       <p className="tribe-card__index">{tribe.number} / 04</p>
       <span className="tribe-card__line" aria-hidden="true" />

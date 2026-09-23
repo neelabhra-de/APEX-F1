@@ -1,9 +1,19 @@
 import type { ApexConstructorStanding, ApexDriverStanding, ApexLastRace, ApexRace, F1Meeting, WeekendSession } from './f1Types'
 
+let cachedDriverStandings: ApexDriverStanding[] | null = null
+let cachedConstructorStandings: ApexConstructorStanding[] | null = null
+
 async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(path)
-  if (!response.ok) throw new Error(`F1 data request failed (${response.status})`)
-  return response.json() as Promise<T>
+  let lastError: Error | null = null
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await fetch(path)
+      if (response.ok) return response.json() as Promise<T>
+      lastError = new Error(`F1 data request failed (${response.status})`)
+    } catch (error) { lastError = error instanceof Error ? error : new Error('F1 data request failed') }
+    if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 220))
+  }
+  throw lastError ?? new Error('F1 data request failed')
 }
 
 function sessionLabel(name: string) {
@@ -46,11 +56,11 @@ export async function fetchNextRace(): Promise<ApexRace> {
 }
 
 export async function fetchDriverStandings(): Promise<ApexDriverStanding[]> {
-  return getJson<ApexDriverStanding[]>('/api/f1/standings/drivers')
+  try { const value = await getJson<ApexDriverStanding[]>('/api/f1/standings/drivers'); if (value.length) cachedDriverStandings = value; return value } catch (error) { if (cachedDriverStandings?.length) return cachedDriverStandings; throw error }
 }
 
 export async function fetchConstructorStandings(): Promise<ApexConstructorStanding[]> {
-  return getJson<ApexConstructorStanding[]>('/api/f1/standings/teams')
+  try { const value = await getJson<ApexConstructorStanding[]>('/api/f1/standings/teams'); if (value.length) cachedConstructorStandings = value; return value } catch (error) { if (cachedConstructorStandings?.length) return cachedConstructorStandings; throw error }
 }
 
 export async function fetchLastRace(): Promise<ApexLastRace> {

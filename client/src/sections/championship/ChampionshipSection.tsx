@@ -20,9 +20,9 @@ function CountryFlag({ code, nationality }: { code: string | null; nationality: 
   return <span className="championship-flag"><img src={`https://flagcdn.com/${normalized}.svg`} alt={`${nationality ?? normalized} flag`} onError={() => setAvailable(false)} /></span>
 }
 
-function DriverRows({ standings }: { standings: ApexDriverStanding[] }) {
+function DriverRows({ standings, expanded }: { standings: ApexDriverStanding[]; expanded: boolean }) {
   return <div className="championship-rows">
-    {standings.map((standing) => <div className="championship-row" key={standing.driverNumber}>
+    {standings.map((standing, index) => <div className={`championship-row${expanded && index >= 15 ? ' championship-row--revealed' : ''}`} key={standing.driverNumber} style={expanded && index >= 15 ? { '--championship-row-delay': `${(index - 15) * 55}ms` } as CSSProperties : undefined}>
       <span className="championship-row__position">{String(standing.position).padStart(2, '0')}</span>
       <DriverPortrait driver={standing} />
       <div className="championship-row__identity"><strong>{standing.driver}</strong><span className="championship-row__meta"><CountryFlag code={standing.countryCode} nationality={standing.nationality} />{standing.team}</span></div>
@@ -41,21 +41,27 @@ function ConstructorRows({ standings }: { standings: ApexConstructorStanding[] }
   </div>
 }
 
+function StandingsUnavailable({ label }: { label: string }) {
+  return <div className="championship-state championship-state--inline"><span>{label}</span><strong>UNAVAILABLE</strong><small>That standings feed could not be refreshed.</small></div>
+}
+
 function ChampionshipSection() {
   const [drivers, setDrivers] = useState<ApexDriverStanding[] | null>(null)
   const [constructors, setConstructors] = useState<ApexConstructorStanding[] | null>(null)
-  const [error, setError] = useState(false)
+  const [driverError, setDriverError] = useState(false)
+  const [constructorError, setConstructorError] = useState(false)
+  const [driversExpanded, setDriversExpanded] = useState(false)
 
   useEffect(() => {
     let active = true
-    Promise.all([fetchDriverStandings(), fetchConstructorStandings()])
-      .then(([driverData, constructorData]) => { if (active) { setDrivers(driverData); setConstructors(constructorData) } })
-      .catch(() => { if (active) setError(true) })
+    fetchDriverStandings().then((data) => active && setDrivers(data)).catch(() => active && setDriverError(true))
+    fetchConstructorStandings().then((data) => active && setConstructors(data)).catch(() => active && setConstructorError(true))
     return () => { active = false }
   }, [])
 
-  const isLoading = !drivers || !constructors
-  const isEmpty = !isLoading && (!drivers.length || !constructors.length)
+  const isLoading = !drivers && !constructors && !driverError && !constructorError
+  const hasAnyStandings = Boolean(drivers?.length || constructors?.length)
+  const isEmpty = !isLoading && !hasAnyStandings && !driverError && !constructorError
   const leader = drivers?.[0]
 
   return <section className="championship-section" aria-labelledby="championship-title">
@@ -64,15 +70,15 @@ function ChampionshipSection() {
       <h2 id="championship-title">Who leads<br />the grid?</h2>
       <p className="championship-intro__note">Current standings / Formula 1 2026</p>
     </div>
-    {error ? <div className="championship-state" role="alert"><span>Championship</span><strong>STANDINGS UNAVAILABLE</strong><small>F1 data could not be reached. Please try again shortly.</small></div> : isLoading ? <div className="championship-state"><span>Championship</span><strong>LOADING STANDINGS</strong><small>Syncing the current driver and constructor order.</small></div> : isEmpty ? <div className="championship-state"><span>Championship</span><strong>NO STANDINGS YET</strong><small>No completed championship data is available.</small></div> : leader ? <div className="championship-content">
-      <div className="championship-leader" style={leader.teamColor ? { '--leader-color': leader.teamColor } as CSSProperties : undefined}>
+    {isLoading ? <div className="championship-state"><span>Championship</span><strong>LOADING STANDINGS</strong><small>Syncing the current driver and constructor order.</small></div> : isEmpty ? <div className="championship-state" role="alert"><span>Championship</span><strong>STANDINGS UNAVAILABLE</strong><small>F1 data could not be reached. Please try again shortly.</small></div> : <div className="championship-content">
+      {leader ? <div className="championship-leader" style={leader.teamColor ? { '--leader-color': leader.teamColor } as CSSProperties : undefined}>
         <p className="championship-label">Championship leader</p><span className="championship-leader__position">{String(leader.position).padStart(2, '0')}</span>
         <h3>{leader.driver}</h3><p className="championship-leader__team">{leader.team}</p>
         <div className="championship-leader__points"><strong>{points(leader.points)}</strong><span>Points</span></div>
-      </div>
-      <section className="championship-drivers" aria-labelledby="drivers-title"><div className="championship-section-heading"><h3 id="drivers-title">Drivers</h3><span>Position / Driver / Team / Points</span></div><DriverRows standings={drivers} /></section>
-      <section className="championship-constructors" aria-labelledby="constructors-title"><div className="championship-section-heading"><h3 id="constructors-title">Constructors</h3><span>Position / Team / Points</span></div><ConstructorRows standings={constructors} /></section>
-    </div> : null}
+      </div> : <StandingsUnavailable label="Drivers" />}
+      <section className="championship-drivers" aria-labelledby="drivers-title">{drivers?.length ? <><div className="championship-section-heading"><h3 id="drivers-title">Drivers</h3><span>Position / Driver / Team / Points</span></div><DriverRows standings={driversExpanded ? drivers : drivers.slice(0, 15)} expanded={driversExpanded} />{drivers.length > 15 && <button className="championship-standings-toggle" type="button" aria-expanded={driversExpanded} onClick={() => setDriversExpanded((value) => !value)}>{driversExpanded ? 'Show top 15' : 'View full standings'} <i>{driversExpanded ? '←' : '→'}</i></button>}</> : <StandingsUnavailable label="Drivers" />}</section>
+      <section className="championship-constructors" aria-labelledby="constructors-title">{constructors?.length ? <><div className="championship-section-heading"><h3 id="constructors-title">Constructors</h3><span>Position / Team / Points</span></div><ConstructorRows standings={constructors} /></> : <StandingsUnavailable label="Constructors" />}</section>
+    </div>}
   </section>
 }
 

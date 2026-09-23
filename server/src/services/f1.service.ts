@@ -8,13 +8,22 @@ const DRIVER_COUNTRY_CODES: Record<number, string> = { 1: 'GB', 3: 'NL', 5: 'BR'
 
 export class OpenF1Error extends Error { statusCode = 502; constructor(message: string) { super(message); this.name = 'OpenF1Error' } }
 
+const RETRYABLE_STATUS = new Set([429, 502, 503, 504])
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 async function openF1<T>(path: string): Promise<T> {
   const now = Date.now(); const hit = cache.get(path)
   if (hit && hit.expiresAt > now) return hit.value as T
-  let response: Response
-  try { response = await fetch(`${OPENF1_BASE}${path}`, { headers: { accept: 'application/json' } }) } catch (error) { throw new OpenF1Error(`OpenF1 request failed: ${error instanceof Error ? error.message : 'network error'}`) }
-  if (!response.ok) throw new OpenF1Error(`OpenF1 returned ${response.status} for ${path}`)
-  const value = await response.json() as T; cache.set(path, { value, expiresAt: now + CACHE_TTL_MS }); return value
+  let lastError = 'network error'
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(`${OPENF1_BASE}${path}`, { headers: { accept: 'application/json' } })
+      if (response.ok) { const value = await response.json() as T; cache.set(path, { value, expiresAt: Date.now() + CACHE_TTL_MS }); return value }
+      lastError = `OpenF1 returned ${response.status} for ${path}`
+      if (!RETRYABLE_STATUS.has(response.status)) break
+    } catch (error) { lastError = `OpenF1 request failed: ${error instanceof Error ? error.message : 'network error'}` }
+    if (attempt < 2) await wait(180 * (attempt + 1))
+  }
+  throw new OpenF1Error(lastError)
 }
 function isCancelled(meeting: OpenF1Meeting) { return `${meeting.meeting_name} ${meeting.meeting_official_name}`.toLowerCase().includes('cancel') }
 function sortByStart<T extends { date_start: string }>(a: T, b: T) { return new Date(a.date_start).getTime() - new Date(b.date_start).getTime() }
@@ -52,8 +61,12 @@ async function loadDriverMetadata(sessionKey: number, driverNumbers: Set<number>
   const orderedKeys = [sessionKey, ...races.slice().reverse().map((race) => race.session_key).filter((key) => key !== sessionKey)]
   for (const key of orderedKeys) {
     if (metadata.size >= driverNumbers.size) break
-    const drivers = await openF1<OpenF1Driver[]>(`/drivers?session_key=${key}`)
-    for (const driver of drivers) if (driverNumbers.has(driver.driver_number) && !metadata.has(driver.driver_number)) metadata.set(driver.driver_number, driver)
+    try {
+      const drivers = await openF1<OpenF1Driver[]>(`/drivers?session_key=${key}`)
+      for (const driver of drivers) if (driverNumbers.has(driver.driver_number) && !metadata.has(driver.driver_number)) metadata.set(driver.driver_number, driver)
+    } catch {
+      // A missing historical metadata snapshot should not invalidate valid standings.
+    }
   }
   return metadata
 }
@@ -98,10 +111,9 @@ export async function getDriverStandings(): Promise<F1DriverStanding[]> {
 }
 export async function getTeamStandings(): Promise<F1TeamStanding[]> {
   const sessionKey = await latestCompletedRaceSessionKey()
-  const [standings, drivers] = await Promise.all([
-    openF1<OpenF1TeamStanding[]>(`/championship_teams?session_key=${sessionKey}`),
-    openF1<OpenF1Driver[]>(`/drivers?session_key=${sessionKey}`),
-  ])
+  const standings = await openF1<OpenF1TeamStanding[]>(`/championship_teams?session_key=${sessionKey}`)
+  let drivers: OpenF1Driver[] = []
+  try { drivers = await openF1<OpenF1Driver[]>(`/drivers?session_key=${sessionKey}`) } catch { /* team standings remain valid without optional color metadata */ }
   const teamColors = new Map<string, string>()
   for (const driver of drivers) if (driver.team_colour && !teamColors.has(driver.team_name)) teamColors.set(driver.team_name, `#${driver.team_colour}`)
   return standings.sort((a, b) => a.position_current - b.position_current).map((standing) => ({ position: standing.position_current, team: standing.team_name, points: standing.points_current, teamColor: teamColors.get(standing.team_name) ?? null }))

@@ -666,6 +666,22 @@
   .final-reveal__identifier { font-size: 0.43rem; }
 }
 
+/* Global cinematic navigation. */
+.global-menu-trigger { position: fixed; z-index: 80; top: 1.5rem; right: clamp(1.5rem, 6vw, 6rem); color: rgba(244,243,239,.72); background: transparent; border: 0; cursor: pointer; font-size: .56rem; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; transition: color .25s ease, transform .25s ease; }
+.global-menu-trigger:hover, .global-menu-trigger:focus-visible { color: #f4f3ef; transform: translateY(-2px); outline: none; }
+.global-menu { position: fixed; z-index: 70; inset: 0; display: grid; place-items: center; background: rgba(5,5,5,.96); animation: global-menu-in .45s cubic-bezier(.2,.8,.2,1) both; }
+.global-menu__panel { width: min(72rem, 86vw); min-height: 70vh; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(1.5rem,4vw,4rem) 0; }
+.global-menu__head { display: flex; align-items: center; justify-content: space-between; color: #f4f3ef; font-size: .65rem; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; }.global-menu__head button { color: rgba(244,243,239,.5); background: none; border: 0; cursor: pointer; font-size: .52rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }.global-menu__head button:hover,.global-menu__head button:focus-visible { color: #f4f3ef; outline: none; }
+.global-menu__links { display: grid; border-top: 1px solid rgba(244,243,239,.2); }.global-menu__links button { display: grid; grid-template-columns: 4rem minmax(0,1fr) auto; align-items: baseline; gap: 1rem; padding: clamp(1.2rem,2.3vw,2.2rem) 0; color: #f4f3ef; background: none; border: 0; border-bottom: 1px solid rgba(244,243,239,.14); cursor: pointer; text-align: left; transition: color .25s ease, padding-left .35s cubic-bezier(.2,.8,.2,1); }.global-menu__links button span { color: #e10600; font-size: .56rem; letter-spacing: .18em; }.global-menu__links button strong { font-size: clamp(2.6rem,7vw,8rem); font-weight: 900; line-height: .75; letter-spacing: -.1em; text-transform: uppercase; }.global-menu__links button i { color: rgba(244,243,239,.4); font-size: 1.5rem; font-style: normal; transition: transform .25s ease; }.global-menu__links button:hover,.global-menu__links button:focus-visible { padding-left: 1rem; color: #e10600; outline: none; }.global-menu__links button:hover i,.global-menu__links button:focus-visible i { transform: translate(4px,-4px); }.global-menu__foot { margin: 0; color: rgba(244,243,239,.38); font-size: .5rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+@keyframes global-menu-in { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .global-menu, .global-menu__links button, .tribe-card__image, .tribe-card__copy, .tribe-card__explore i, .last-race__results-list, .last-race__results-list .last-race__result { animation: none; transition: none; } }
+
+/* Tribe cards remain cinematic, with a restrained interaction affordance. */
+.tribe-card { cursor: pointer; }.tribe-card__copy { transition: transform .4s cubic-bezier(.2,.8,.2,1); }.tribe-card__explore { display: flex; align-items: center; gap: .8rem; margin-top: 1.5rem; color: var(--tribe); font-size: .55rem; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; opacity: 0; transform: translateX(-.7rem); transition: opacity .3s ease, transform .4s cubic-bezier(.2,.8,.2,1); }.tribe-card__explore i { font-size: 1.1rem; font-style: normal; transition: transform .3s ease; }.tribe-card:hover .tribe-card__copy, .tribe-card:focus-within .tribe-card__copy { transform: translateY(-.45rem); }.tribe-card:hover .tribe-card__explore, .tribe-card:focus-within .tribe-card__explore { opacity: 1; transform: translateX(0); }.tribe-card:hover .tribe-card__explore i, .tribe-card:focus-within .tribe-card__explore i { transform: translateX(.35rem); }.tribe-card:hover .tribe-card__image, .tribe-card:focus-within .tribe-card__image { filter: saturate(1.08); }
+
+/* Expandable Last Race classification. */
+.last-race__results-list { max-height: 14.2rem; overflow: hidden; transition: max-height .65s cubic-bezier(.2,.8,.2,1); }.last-race__results-list.is-expanded { max-height: 50rem; }.last-race__results-list .last-race__result:nth-child(n+4) { opacity: 0; transform: translateY(-.4rem); pointer-events: none; }.last-race__results-list.is-expanded .last-race__result:nth-child(n+4) { opacity: 1; transform: translateY(0); transition: opacity .45s var(--result-delay) ease, transform .45s var(--result-delay) cubic-bezier(.2,.8,.2,1); pointer-events: auto; }.last-race__toggle { display: inline-flex; align-items: center; gap: .8rem; margin-top: 1.2rem; padding: .8rem 0; color: rgba(244,243,239,.72); background: transparent; border: 0; cursor: pointer; font-size: .54rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }.last-race__toggle i { color: #e10600; font-size: 1rem; font-style: normal; transition: transform .25s ease; }.last-race__toggle:hover,.last-race__toggle:focus-visible { color: #f4f3ef; outline: none; }.last-race__toggle:hover i,.last-race__toggle:focus-visible i { transform: translateX(.35rem); }
+
 html,
 body,
 #root {
@@ -861,9 +877,13 @@ select {
 .championship-flag img { width: 100%; height: 100%; object-fit: cover; }
 .championship-flag--fallback { color: rgba(244,243,239,.32); font-size: .5rem; }
 .championship-team-mark { display: inline-block; width: .2rem; height: 1.1rem; flex: none; background: rgba(244,243,239,.35); }
+.championship-state--inline { min-height: 8rem; padding: 1.5rem 0; gap: .7rem; }
+.championship-state--inline strong { font-size: clamp(1.5rem, 3vw, 2.8rem); }
 .championship-rows--constructors .championship-row { grid-template-columns: 3.2rem minmax(0, 1fr) auto; }
 .championship-rows--constructors .championship-row__identity strong { overflow: visible; text-overflow: clip; }
 @media (max-width: 640px) {
   .championship-row { grid-template-columns: 2.5rem 2.15rem minmax(0, 1fr) auto; }
   .championship-rows--constructors .championship-row { grid-template-columns: 2.5rem minmax(0, 1fr) auto; }
 }
+.championship-standings-toggle { display: inline-flex; align-items: center; gap: .8rem; margin-top: 1.2rem; padding: .8rem 0; color: rgba(244,243,239,.72); background: transparent; border: 0; cursor: pointer; font-size: .54rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }.championship-standings-toggle i { color: #e10600; font-size: 1rem; font-style: normal; transition: transform .25s ease; }.championship-standings-toggle:hover,.championship-standings-toggle:focus-visible { color: #f4f3ef; outline: none; }.championship-standings-toggle:hover i,.championship-standings-toggle:focus-visible i { transform: translateX(.35rem); }.championship-row--revealed { animation-delay: var(--championship-row-delay, 0ms); }
+@media (prefers-reduced-motion: reduce) { .championship-row--revealed, .championship-standings-toggle i { animation: none; transition: none; } }
