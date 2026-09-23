@@ -14,6 +14,7 @@ interface CinematicScrollSnapshot {
 
 interface UseCinematicScrollResult extends CinematicScrollSnapshot {
   scrollRef: RefObject<HTMLDivElement | null>
+  reducedMotion: boolean
 }
 
 const PROGRESS_STEP = 0.01
@@ -49,15 +50,25 @@ export function useCinematicScroll(
 ): UseCinematicScrollResult {
   const scrollRef = useRef<HTMLDivElement>(null)
   const initialSnapshot = getSnapshot(0, scenes)
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   const [snapshot, setSnapshot] = useState(initialSnapshot)
   const snapshotRef = useRef(initialSnapshot)
   const frameRef = useRef<number | null>(null)
   const pendingProgressRef = useRef(0)
 
   useLayoutEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const updatePreference = () => setReducedMotion(mediaQuery.matches)
+    mediaQuery.addEventListener('change', updatePreference)
+    return () => mediaQuery.removeEventListener('change', updatePreference)
+  }, [])
+
+  useLayoutEffect(() => {
     const scrollElement = scrollRef.current
 
-    if (!scrollElement) {
+    if (!scrollElement || reducedMotion) {
+      setSnapshot(initialSnapshot)
+      snapshotRef.current = initialSnapshot
       return undefined
     }
 
@@ -125,7 +136,7 @@ export function useCinematicScroll(
 
       context.revert()
     }
-  }, [scenes])
+  }, [reducedMotion, scenes])
 
-  return { scrollRef, ...snapshot }
+  return { scrollRef, ...snapshot, reducedMotion }
 }

@@ -14,6 +14,8 @@ function TribesSection() {
     const track = trackRef.current
     if (!section || !track) return undefined
 
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+
     const context = gsap.context(() => {
       const distance = () => Math.max(0, track.scrollWidth - window.innerWidth)
       const horizontalTween = gsap.to(track, {

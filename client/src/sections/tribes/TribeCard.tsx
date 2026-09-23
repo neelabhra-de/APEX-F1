@@ -7,7 +7,7 @@ function TribeCard({ tribe }: TribeCardProps) {
   const style = { '--tribe': tribe.color, '--tribe-soft': tribe.colorSoft } as CSSProperties
 
   return (
-    <article tabIndex={0} className={`tribe-card tribe-card--${tribe.className}`} style={style}>
+    <article className={`tribe-card tribe-card--${tribe.className}`} style={style}>
       <div className="tribe-card__texture" aria-hidden="true">
         <img
           className="tribe-card__image"

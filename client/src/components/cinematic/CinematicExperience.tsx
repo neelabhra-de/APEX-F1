@@ -29,7 +29,7 @@ const sceneComponents: Record<CinematicSceneId, ComponentType<CinematicSceneProp
 }
 
 function CinematicExperience() {
-  const { activeSceneIndex, overallProgress, sceneProgress, scrollRef } = useCinematicScroll(SCENES)
+  const { activeSceneIndex, overallProgress, sceneProgress, scrollRef, reducedMotion } = useCinematicScroll(SCENES)
   const activeScene = SCENES.find((scene) => scene.index === activeSceneIndex)
 
   if (!activeScene) {
@@ -37,7 +37,7 @@ function CinematicExperience() {
   }
 
   return (
-    <div ref={scrollRef} className="relative h-[600svh]">
+    <div ref={scrollRef} className={`relative ${reducedMotion ? 'h-svh' : 'h-[600svh]'}`}>
       <div className="sticky top-0 h-svh overflow-hidden bg-(--apex-black)">
         <HeroCarCanvas sceneProgress={overallProgress} className="z-0" />
         {SCENES.map((scene) => {

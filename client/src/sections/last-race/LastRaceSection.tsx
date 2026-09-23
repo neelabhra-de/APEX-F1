@@ -3,8 +3,9 @@ import { fetchLastRace } from '../../data/f1/f1Api'
 import type { ApexLastRace, ApexLastRaceDriver } from '../../data/f1/f1Types'
 
 function Flag({ code }: { code: string | null }) {
-  if (!code) return <span className="last-race__flag last-race__flag--fallback">APEX</span>
-  return <span className="last-race__flag"><img src={`https://flagcdn.com/${code.toLowerCase()}.svg`} alt={`${code} flag`} /></span>
+  const [available, setAvailable] = useState(Boolean(code))
+  if (!available || !code) return <span className="last-race__flag last-race__flag--fallback">APEX</span>
+  return <span className="last-race__flag"><img src={`https://flagcdn.com/${code.toLowerCase()}.svg`} alt={`${code} flag`} onError={() => setAvailable(false)} /></span>
 }
 
 function Portrait({ driver }: { driver: ApexLastRaceDriver }) {

@@ -1,6 +1,6 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import { AmbientLight, Color, DirectionalLight, Fog, HemisphereLight, PointLight } from 'three'
 import type { HeroCarProps } from './HeroCar'
@@ -55,11 +55,17 @@ function HeroCarLighting({ sceneProgress }: Pick<HeroCarProps, 'sceneProgress'>)
 	const redRimRef = useRef<PointLight>(null)
 	const coolRimRef = useRef<PointLight>(null)
 	const { scene } = useThree()
-	const graphite = new Color('#111820')
-	const blue = new Color('#07152b')
-	const red = new Color('#240609')
-	const orange = new Color('#251207')
-	const coolColor = new Color('#9daeff')
+  const graphite = useMemo(() => new Color('#111820'), [])
+  const blue = useMemo(() => new Color('#07152b'), [])
+  const red = useMemo(() => new Color('#240609'), [])
+  const orange = useMemo(() => new Color('#251207'), [])
+  const coolColor = useMemo(() => new Color('#9daeff'), [])
+  const neutral = useMemo(() => new Color('#11161b'), [])
+  const keyWarm = useMemo(() => new Color('#fff4e5'), [])
+  const keyCool = useMemo(() => new Color('#dce6eb'), [])
+  const rimWarm = useMemo(() => new Color('#ff8a36'), [])
+  const rimOrange = useMemo(() => new Color('#ff9a3d'), [])
+  const atmosphere = useMemo(() => new Color(), [])
 
 	useFrame(() => {
 		const progress = sceneProgress ?? 0
@@ -68,7 +74,7 @@ function HeroCarLighting({ sceneProgress }: Pick<HeroCarProps, 'sceneProgress'>)
 		const mclarenMix = smoothstep(progress, 0.46, 0.64)
 		const mercedesMix = smoothstep(progress, 0.62, 0.72)
 		const finalQuiet = smoothstep(progress, 0.78, 0.82)
-		const atmosphere = graphite.clone().lerp(blue, redBullMix).lerp(red, ferrariMix).lerp(orange, mclarenMix).lerp(new Color('#11161b'), mercedesMix)
+    atmosphere.copy(graphite).lerp(blue, redBullMix).lerp(red, ferrariMix).lerp(orange, mclarenMix).lerp(neutral, mercedesMix)
 		if (ambientRef.current) {
 			ambientRef.current.intensity = 0.58 + Math.sin(progress * Math.PI) * 0.14 + ferrariMix * 0.1 + redBullMix * 0.08 + mercedesMix * 0.12 - finalQuiet * 0.14
 		}
@@ -84,14 +90,14 @@ function HeroCarLighting({ sceneProgress }: Pick<HeroCarProps, 'sceneProgress'>)
 		}
 		if (redRimRef.current) {
 			redRimRef.current.intensity = 1.5 + Math.sin(progress * Math.PI) * 0.5 + ferrariMix * 1.1 + redBullMix * 0.35
-			redRimRef.current.color.copy(red).lerp(coolColor, redBullMix * 0.7).lerp(new Color('#ff8a36'), mclarenMix * 0.35)
+          redRimRef.current.color.copy(red).lerp(coolColor, redBullMix * 0.7).lerp(rimWarm, mclarenMix * 0.35)
 		}
 		if (coolRimRef.current) {
 			coolRimRef.current.intensity = 1.2 + Math.sin(progress * Math.PI) * 0.45 + ferrariMix * 0.3 + mclarenMix * 0.55 + mercedesMix * 0.65 - finalQuiet * 0.5
-			coolRimRef.current.color.copy(coolColor).lerp(new Color('#ff9a3d'), mclarenMix * 0.4).lerp(new Color('#c6d4dd'), mercedesMix)
+          coolRimRef.current.color.copy(coolColor).lerp(rimOrange, mclarenMix * 0.4).lerp(keyCool, mercedesMix)
 		}
 		if (keyRef.current) {
-			keyRef.current.color.set('#f7f7f5').lerp(new Color('#fff4e5'), mclarenMix).lerp(new Color('#dce6eb'), mercedesMix)
+          keyRef.current.color.set('#f7f7f5').lerp(keyWarm, mclarenMix).lerp(keyCool, mercedesMix)
 			keyRef.current.intensity = 2.6 + Math.sin(progress * Math.PI) * 0.3 + ferrariMix * 0.65 + redBullMix * 0.3 + mclarenMix * 0.55 + mercedesMix * 0.25 - finalQuiet * 0.24
 		}
 		if (scene.fog instanceof Fog) {
