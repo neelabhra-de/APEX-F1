@@ -1,6 +1,6 @@
 import type { CinematicSceneProps } from '../types/cinematic'
 
-function LegacyScene({ isActive, overallProgress, sceneProgress }: CinematicSceneProps) {
+function LegacyScene({ sceneProgress }: CinematicSceneProps) {
   const reveal = Math.min(1, Math.max(0, sceneProgress))
   const titleOpacity = Math.min(1, 0.24 + reveal * 0.76)
   const titleShift = (1 - reveal) * 12 - reveal * 4
@@ -35,7 +35,6 @@ function LegacyScene({ isActive, overallProgress, sceneProgress }: CinematicScen
         <span>Formula 1 / 2026</span>
         <span>Maranello / Italia</span>
       </div>
-      <span className="sr-only">Active: {String(isActive)}. Overall progress: {overallProgress}. Scene progress: {sceneProgress}.</span>
     </div>
   )
 }

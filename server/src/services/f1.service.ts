@@ -1,5 +1,5 @@
 import { env } from '../config/env.js'
-import type { F1DriverStanding, F1Meeting, F1NextRace, F1Session, F1TeamStanding, OpenF1Driver, OpenF1DriverStanding, OpenF1Meeting, OpenF1Session, OpenF1TeamStanding } from '../types/f1.js'
+import type { F1DriverStanding, F1LastRace, F1LastRaceDriver, F1Meeting, F1NextRace, F1Session, F1TeamStanding, OpenF1Driver, OpenF1DriverStanding, OpenF1Meeting, OpenF1Session, OpenF1SessionResult, OpenF1TeamStanding } from '../types/f1.js'
 
 const OPENF1_BASE = 'https://api.openf1.org/v1'
 const CACHE_TTL_MS = 10 * 60 * 1000
@@ -56,6 +56,35 @@ async function loadDriverMetadata(sessionKey: number, driverNumbers: Set<number>
     for (const driver of drivers) if (driverNumbers.has(driver.driver_number) && !metadata.has(driver.driver_number)) metadata.set(driver.driver_number, driver)
   }
   return metadata
+}
+function resultTime(result: OpenF1SessionResult, winnerDuration: number | null) {
+  if (result.dsq) return 'DSQ'
+  if (result.dns) return 'DNS'
+  if (result.dnf) return 'DNF'
+  if (result.position === 1 && result.duration != null) return `${Math.floor(result.duration / 60)}:${String(Math.floor(result.duration % 60)).padStart(2, '0')}`
+  if (result.gap_to_leader != null && result.gap_to_leader > 0) return `+${result.gap_to_leader.toFixed(3)}s`
+  if (winnerDuration != null && result.duration != null) return `+${(result.duration - winnerDuration).toFixed(3)}s`
+  return '—'
+}
+function normalizeRaceResult(result: OpenF1SessionResult, driver: OpenF1Driver | undefined, winnerDuration: number | null): F1LastRaceDriver {
+  const imageUrl = driver?.headshot_url ?? null
+  return { position: result.position, driverNumber: result.driver_number, driver: driver ? `${driver.first_name} ${driver.last_name}` : `Driver ${result.driver_number}`, team: driver?.team_name ?? 'Team unavailable', teamColor: driver?.team_colour ? `#${driver.team_colour}` : null, countryCode: driver?.country_code ?? DRIVER_COUNTRY_CODES[result.driver_number] ?? null, imageUrl, status: result.dnf || result.dns || result.dsq ? resultTime(result, winnerDuration) : 'Finished', time: resultTime(result, winnerDuration) }
+}
+export async function getLastRace(): Promise<F1LastRace | null> {
+  const races = await completedRaceSessions()
+  const raceSession = races.at(-1)
+  if (!raceSession) return null
+  const [meetings, results] = await Promise.all([
+    getSeason(env.season),
+    openF1<OpenF1SessionResult[]>(`/session_result?session_key=${raceSession.session_key}`),
+  ])
+  const meeting = meetings.find((item) => item.meetingKey === raceSession.meeting_key)
+  if (!meeting || !results.length) return null
+  const ordered = results.filter((result) => result.position > 0).sort((a, b) => a.position - b.position)
+  const driverMap = await loadDriverMetadata(raceSession.session_key, new Set(ordered.map((result) => result.driver_number)))
+  const winnerDuration = ordered[0]?.duration ?? null
+  const normalized = ordered.slice(0, 10).map((result) => normalizeRaceResult(result, driverMap.get(result.driver_number), winnerDuration))
+  return { meetingKey: meeting.meetingKey, round: meeting.round, raceName: meeting.name, officialName: meeting.officialName, country: meeting.country, location: meeting.location, circuit: meeting.circuit, circuitKey: meeting.circuitKey, raceDate: raceSession.date_start, winner: normalized[0], secondPlace: normalized[1] ?? null, thirdPlace: normalized[2] ?? null, results: normalized }
 }
 export async function getDriverStandings(): Promise<F1DriverStanding[]> {
   const sessionKey = await latestCompletedRaceSessionKey()

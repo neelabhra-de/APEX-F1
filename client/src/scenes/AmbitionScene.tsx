@@ -1,6 +1,6 @@
 import type { CinematicSceneProps } from '../types/cinematic'
 
-function AmbitionScene({ isActive, overallProgress, sceneProgress }: CinematicSceneProps) {
+function AmbitionScene({ sceneProgress }: CinematicSceneProps) {
   const progress = Math.min(1, Math.max(0, sceneProgress))
   const reveal = Math.min(1, progress * 2.2)
   const titleShift = (1 - progress) * 8 + progress * 12
@@ -30,7 +30,6 @@ function AmbitionScene({ isActive, overallProgress, sceneProgress }: CinematicSc
         <span>Progress / Pace / Purpose</span>
         <span>Woking / UK</span>
       </div>
-      <span className="sr-only">Active: {String(isActive)}. Overall progress: {overallProgress}. Scene progress: {sceneProgress}.</span>
     </div>
   )
 }

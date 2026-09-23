@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
 import type { CinematicSceneProps } from '../types/cinematic'
 
-function OpeningScene({ isActive, overallProgress, sceneProgress }: CinematicSceneProps) {
+function OpeningScene({ sceneProgress }: CinematicSceneProps) {
   const metadataRef = useRef<HTMLParagraphElement>(null)
 
   useLayoutEffect(() => {
@@ -24,7 +24,9 @@ function OpeningScene({ isActive, overallProgress, sceneProgress }: CinematicSce
           Formula 1 / 2026
         </p>
       </div>
-      <span className="sr-only">Active: {String(isActive)}. Overall progress: {overallProgress}. Scene progress: {sceneProgress}.</span>
+      <div className="opening-scroll-cue" style={{ opacity: Math.max(0, 1 - sceneProgress * 8) }} aria-hidden="true">
+        <span>Scroll to enter</span><i />
+      </div>
     </div>
   )
 }

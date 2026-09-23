@@ -39,3 +39,5 @@ export type ApexRace = {
 
 export type ApexDriverStanding = { position: number; driverNumber: number; driver: string; team: string; points: number; teamColor: string | null; countryCode: string | null; nationality: string | null; imageUrl: string | null }
 export type ApexConstructorStanding = { position: number; team: string; points: number; teamColor: string | null }
+export type ApexLastRaceDriver = { position: number; driverNumber: number; driver: string; team: string; teamColor: string | null; countryCode: string | null; imageUrl: string | null; status: string; time: string }
+export type ApexLastRace = { meetingKey: number; round: number | null; raceName: string; officialName: string; country: string; location: string; circuit: string; circuitKey: number; raceDate: string; winner: ApexLastRaceDriver; secondPlace: ApexLastRaceDriver | null; thirdPlace: ApexLastRaceDriver | null; results: ApexLastRaceDriver[] }

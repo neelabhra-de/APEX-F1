@@ -1,6 +1,6 @@
 import type { CinematicSceneProps } from '../types/cinematic'
 
-function AggressionScene({ isActive, overallProgress, sceneProgress }: CinematicSceneProps) {
+function AggressionScene({ sceneProgress }: CinematicSceneProps) {
   const progress = Math.min(1, Math.max(0, sceneProgress))
   const reveal = Math.min(1, progress * 2.2)
   const titleShift = (1 - progress) * 34 - progress * 48
@@ -30,7 +30,6 @@ function AggressionScene({ isActive, overallProgress, sceneProgress }: Cinematic
         <span>Pressure / Instinct / Momentum</span>
         <span>Milton Keynes / UK</span>
       </div>
-      <span className="sr-only">Active: {String(isActive)}. Overall progress: {overallProgress}. Scene progress: {sceneProgress}.</span>
     </div>
   )
 }

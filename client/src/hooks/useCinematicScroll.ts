@@ -88,19 +88,39 @@ export function useCinematicScroll(
       })
     }
 
+    let cinematicTrigger: ScrollTrigger | null = null
     const context = gsap.context(() => {
-      ScrollTrigger.create({
+      cinematicTrigger = ScrollTrigger.create({
         trigger: scrollElement,
         start: 'top top',
-        end: 'bottom bottom',
+        // The sticky viewport consumes one viewport of the section. Deriving the
+        // travel distance explicitly keeps progress reversible at both boundaries
+        // across resize and browser scroll restoration.
+        end: () => `+=${Math.max(1, scrollElement.offsetHeight - window.innerHeight)}`,
+        invalidateOnRefresh: true,
         onUpdate: (trigger) => requestProgressUpdate(trigger.progress),
         onRefresh: (trigger) => publishProgress(trigger.progress, true),
       })
     }, scrollElement)
 
+    const syncToScrollPosition = () => {
+      if (cinematicTrigger) publishProgress(cinematicTrigger.progress, true)
+    }
+
+    // Browser scroll restoration can settle after React's layout effects. Refresh once
+    // after all pinned sections exist, then read the trigger's actual progress.
+    const refreshTimer = window.setTimeout(() => {
+      ScrollTrigger.refresh()
+      syncToScrollPosition()
+    }, 0)
+    window.addEventListener('pageshow', syncToScrollPosition)
+
     return () => {
+      window.clearTimeout(refreshTimer)
+      window.removeEventListener('pageshow', syncToScrollPosition)
       if (frameRef.current !== null) {
         window.cancelAnimationFrame(frameRef.current)
+        frameRef.current = null
       }
 
       context.revert()

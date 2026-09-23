@@ -9,7 +9,6 @@ import FinalRevealScene from '../../scenes/FinalRevealScene'
 import { useCinematicScroll } from '../../hooks/useCinematicScroll'
 import type { CinematicSceneDefinition, CinematicSceneId, CinematicSceneProps } from '../../types/cinematic'
 import CinematicScene from './CinematicScene'
-import SceneProgress from './SceneProgress'
 
 const SCENES: readonly CinematicSceneDefinition[] = [
   { id: 'opening', index: 0, name: 'Formula 1 / 2026', range: { start: 0, end: 0.1 }, enabled: true },
@@ -51,7 +50,6 @@ function CinematicExperience() {
             </CinematicScene>
           )
         })}
-        <SceneProgress activeScene={activeScene} overallProgress={overallProgress} sceneProgress={sceneProgress} />
       </div>
     </div>
   )

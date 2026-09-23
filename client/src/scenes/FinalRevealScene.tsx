@@ -10,7 +10,7 @@ const identities = [
   { label: 'Precision', number: '04', color: '#9baab0', x: 28, y: 25, scale: 0.86 },
 ] as const
 
-function FinalRevealScene({ isActive, overallProgress, sceneProgress }: CinematicSceneProps) {
+function FinalRevealScene({ sceneProgress }: CinematicSceneProps) {
   const progress = clamp(sceneProgress)
   const memoryReveal = clamp((progress - 0.16) / 0.15)
   const convergence = clamp((progress - 0.46) / 0.27)
@@ -57,7 +57,6 @@ function FinalRevealScene({ isActive, overallProgress, sceneProgress }: Cinemati
         <p className="final-reveal__tagline" style={{ opacity: taglineReveal, transform: `translate3d(0, ${(1 - taglineReveal) * 0.6}rem, 0)` }}>The race, beyond the flag.</p>
         <p className="final-reveal__identifier" style={{ opacity: taglineReveal * 0.7 }}>Formula 1 / 2026 · Cinematic experience</p>
       </div>
-      <span className="sr-only">Active: {String(isActive)}. Overall progress: {overallProgress}. Scene progress: {sceneProgress}.</span>
     </div>
   )
 }

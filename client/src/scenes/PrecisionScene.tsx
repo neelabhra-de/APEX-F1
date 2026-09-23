@@ -1,6 +1,6 @@
 import type { CinematicSceneProps } from '../types/cinematic'
 
-function PrecisionScene({ isActive, overallProgress, sceneProgress }: CinematicSceneProps) {
+function PrecisionScene({ sceneProgress }: CinematicSceneProps) {
   const progress = Math.min(1, Math.max(0, sceneProgress))
   const arrival = Math.min(1, progress / 0.32)
   const silence = Math.min(1, Math.max(0, (progress - 0.78) / 0.22))
@@ -29,7 +29,6 @@ function PrecisionScene({ isActive, overallProgress, sceneProgress }: CinematicS
         <span>Control / Engineering / Discipline</span>
         <span>Brackley / UK</span>
       </div>
-      <span className="sr-only">Active: {String(isActive)}. Overall progress: {overallProgress}. Scene progress: {sceneProgress}.</span>
     </div>
   )
 }
