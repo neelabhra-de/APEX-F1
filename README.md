@@ -8,7 +8,7 @@
 
 Instead of starting with tables, cards and statistics, APEX starts with **machines, atmosphere, motion and storytelling**, and gradually transitions into real F1 data.
 
-🌐 **Live:** https://apex-f1.vercel.app
+🌐 **Live:** https://apex-f1-n.vercel.app/
 📦 **Repository:** https://github.com/neelabhra-de/APEX-F1
 
 ---
