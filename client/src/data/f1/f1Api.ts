@@ -1,5 +1,7 @@
 import type { ApexConstructorStanding, ApexDriverStanding, ApexLastRace, ApexRace, F1Meeting, WeekendSession } from './f1Types'
 
+const API_BASE_URL = (import.meta.env as ImportMetaEnv & { VITE_API_BASE_URL?: string }).VITE_API_BASE_URL ?? ''
+
 let cachedDriverStandings: ApexDriverStanding[] | null = null
 let cachedConstructorStandings: ApexConstructorStanding[] | null = null
 
@@ -7,7 +9,7 @@ async function getJson<T>(path: string): Promise<T> {
   let lastError: Error | null = null
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      const response = await fetch(path)
+      const response = await fetch(`${API_BASE_URL}${path}`)
       if (response.ok) return response.json() as Promise<T>
       lastError = new Error(`F1 data request failed (${response.status})`)
     } catch (error) { lastError = error instanceof Error ? error : new Error('F1 data request failed') }
