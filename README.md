@@ -545,17 +545,6 @@ It is intentionally being developed in stages rather than trying to build every 
 # 👨‍💻 Author
 
 **Neelabhra De**
-
-B.Tech IT — Netaji Subhash Engineering College, Kolkata
-
-Building things around:
-
-* Frontend Engineering
-* Creative Development
-* 3D Web Experiences
-* Full-Stack Development
-* AI-powered applications
-
 ---
 
 ## ⭐ If you like the project
