@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">APEX</title>
+  <desc id="desc">Geometric APEX A mark</desc>
+  <rect width="64" height="64" rx="12" fill="#050505"/>
+  <path fill="#f7f7f5" fill-rule="evenodd" d="M10 52 26 12h12l16 40H42l-3.2-9H25.2L22 52H10Zm19-19h6l-3-10-3 10Z"/>
+</svg>
