@@ -23,6 +23,7 @@ async function openF1<T>(path: string): Promise<T> {
     } catch (error) { lastError = `OpenF1 request failed: ${error instanceof Error ? error.message : 'network error'}` }
     if (attempt < 2) await wait(180 * (attempt + 1))
   }
+  if (hit) return hit.value as T
   throw new OpenF1Error(lastError)
 }
 function isCancelled(meeting: OpenF1Meeting) { return `${meeting.meeting_name} ${meeting.meeting_official_name}`.toLowerCase().includes('cancel') }
