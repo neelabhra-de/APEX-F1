@@ -11,6 +11,38 @@ Instead of starting with tables, cards and statistics, APEX starts with **machin
 🌐 **Live:** https://apex-f1-n.vercel.app/
 
 
+## 📸 Screenshots
+
+### THE MACHINES
+
+**Ferrari — LEGACY**
+
+<img width="1917" height="982" alt="Ferrari — Legacy" src="https://github.com/user-attachments/assets/9684b3c1-eaa1-4dec-a495-63fb68f85d99" />
+
+**Red Bull Racing — AGGRESSION**
+
+<img width="1916" height="982" alt="Red Bull Racing — Aggression" src="https://github.com/user-attachments/assets/d46c5874-ef8a-4373-b3a0-7b6a670126f5" />
+
+### THE TRIBES
+
+**Tifosi Dreams**
+
+<img width="1898" height="940" alt="Tifosi Dreams" src="https://github.com/user-attachments/assets/04fbc9b8-b968-4638-86d8-a41fd1f08863" />
+
+### THE GRID
+
+<img width="1911" height="1015" alt="The Grid" src="https://github.com/user-attachments/assets/7e5fa38e-7c6e-4e23-8cea-34f9756e0eb1" />
+
+### CHAMPIONSHIP
+
+<img width="1902" height="1010" alt="Championship Standings" src="https://github.com/user-attachments/assets/ca723659-5a8b-42d2-ad08-34355da05ee7" />
+
+---
+
+
+
+
+
 ---
 
 ## ✦ The Experience
